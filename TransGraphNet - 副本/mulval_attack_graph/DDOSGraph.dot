@@ -1,0 +1,101 @@
+digraph G {
+    rankdir=BT; // 从底向上推导逻辑
+    node [fontsize=10];
+
+    // --- 攻击源层 (Node 1 - 80): 模拟 80 个僵尸主机 ---
+    // 使用循环逻辑生成的节点
+    subgraph cluster_bots {
+        label = "Botnet Nodes (Attacker Locations)";
+        color = lightgrey;
+        1 [label="1:attackerLocated(bot1):1",shape=box];
+        2 [label="2:attackerLocated(bot2):1",shape=box];
+        // ... 此处代表 3-79 的节点 ...
+        80 [label="80:attackerLocated(bot80):1",shape=box];
+        node_dots_1 [label="...", shape=none];
+    }
+
+    // --- 网络访问权限层 (Node 81 - 160): 模拟 80 个防火墙允许规则 ---
+    subgraph cluster_hacl {
+        label = "HACL Rules";
+        81 [label="81:hacl(bot1,webServer,tcp,80):1",shape=box];
+        82 [label="82:hacl(bot2,webServer,tcp,80):1",shape=box];
+        160 [label="160:hacl(bot80,fileServer,tcp,445):1",shape=box];
+        node_dots_2 [label="...", shape=none];
+    }
+
+    // --- 目标 1: Web Server (HTTP/HTTPS) ---
+    161 [label="161:RULE 6 (direct network access)",shape=ellipse];
+    162 [label="162:netAccess(webServer,tcp,80)",shape=diamond];
+    163 [label="163:netAccess(webServer,tcp,443)",shape=diamond];
+    164 [label="164:networkServiceInfo(webServer,httpd,80,apache)",shape=box];
+    165 [label="165:RULE 10 (traffic flooding)",shape=ellipse];
+    166 [label="166:ddosTraffic(webServer)",shape=diamond];
+    167 [label="167:RULE 12 (resource exhaustion)",shape=ellipse];
+    168 [label="168:serviceOverload(webServer)",shape=diamond];
+
+    // --- 目标 2: DNS Server (UDP 53) ---
+    169 [label="169:RULE 6 (direct network access)",shape=ellipse];
+    170 [label="170:netAccess(dnsServer,udp,53)",shape=diamond];
+    171 [label="171:networkServiceInfo(dnsServer,bind,53,udp)",shape=box];
+    172 [label="172:RULE 10 (traffic flooding)",shape=ellipse];
+    173 [label="173:ddosTraffic(dnsServer)",shape=diamond];
+    174 [label="174:RULE 12 (resource exhaustion)",shape=ellipse];
+    175 [label="175:serviceOverload(dnsServer)",shape=diamond];
+
+    // --- 目标 3: Mail Server (SMTP 25) ---
+    176 [label="176:RULE 6 (direct network access)",shape=ellipse];
+    177 [label="177:netAccess(mailServer,tcp,25)",shape=diamond];
+    178 [label="178:networkServiceInfo(mailServer,postfix,25,tcp)",shape=box];
+    179 [label="179:RULE 10 (traffic flooding)",shape=ellipse];
+    180 [label="180:ddosTraffic(mailServer)",shape=diamond];
+    181 [label="181:RULE 12 (resource exhaustion)",shape=ellipse];
+    182 [label="182:serviceOverload(mailServer)",shape=diamond];
+
+    // --- 目标 4: Database Server (SQL 3306) ---
+    183 [label="183:RULE 6 (direct network access)",shape=ellipse];
+    184 [label="184:netAccess(dbServer,tcp,3306)",shape=diamond];
+    185 [label="185:networkServiceInfo(dbServer,mysql,3306,tcp)",shape=box];
+    186 [label="186:RULE 10 (traffic flooding)",shape=ellipse];
+    187 [label="187:ddosTraffic(dbServer)",shape=diamond];
+    188 [label="188:RULE 12 (resource exhaustion)",shape=ellipse];
+    189 [label="189:serviceOverload(dbServer)",shape=diamond];
+
+    // --- 目标 5: File Server (SMB 445) ---
+    190 [label="190:RULE 6 (direct network access)",shape=ellipse];
+    191 [label="191:netAccess(fileServer,tcp,445)",shape=diamond];
+    192 [label="192:networkServiceInfo(fileServer,samba,445,tcp)",shape=box];
+    193 [label="193:RULE 10 (traffic flooding)",shape=ellipse];
+    194 [label="194:ddosTraffic(fileServer)",shape=diamond];
+    195 [label="195:RULE 12 (resource exhaustion)",shape=ellipse];
+    196 [label="196:serviceOverload(fileServer)",shape=diamond];
+
+    // --- 连接逻辑 (示意大规模汇聚) ---
+
+    // 僵尸网络到网络访问权限
+    1 -> 81; 2 -> 82; 80 -> 160;
+
+    // 网络访问权限到 Web Server 规则
+    {81, 82} -> 161;
+    161 -> {162, 163};
+    {162, 163, 164} -> 165 -> 166 -> 167 -> 168;
+
+    // 假设 20-40 号僵尸攻击 DNS
+    node_dots_2 -> 169;
+    169 -> 170;
+    {170, 171} -> 172 -> 173 -> 174 -> 175;
+
+    // 假设 40-60 号僵尸攻击 Mail
+    node_dots_2 -> 176;
+    176 -> 177;
+    {177, 178} -> 179 -> 180 -> 181 -> 182;
+
+    // 假设 60-70 号僵尸攻击 DB
+    node_dots_2 -> 183;
+    183 -> 184;
+    {184, 185} -> 186 -> 187 -> 188 -> 189;
+
+    // 假设 70-80 号僵尸攻击 File
+    160 -> 190;
+    190 -> 191;
+    {191, 192} -> 193 -> 194 -> 195 -> 196;
+}
